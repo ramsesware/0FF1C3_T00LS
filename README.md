@@ -9,7 +9,6 @@ A collection of tools for office-related tasks, designed to streamline document 
   - [MetaClean](#metaclean)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## About
