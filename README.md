@@ -22,7 +22,7 @@ A collection of tools for office-related tasks, designed to streamline document 
 
 The first tool in the suite, **MetaClean**, is a metadata management utility for documents. MetaClean is designed to help analyze and remove metadata from various document formats, enhancing privacy and security. This tool is especially useful for users who want to ensure sensitive metadata is not unintentionally shared in files.
 
-## Features
+#### Features
 - Analyzes metadata in supported document formats
 - Removes unwanted metadata to ensure file privacy
 - Supports multiple file formats commonly used in office environments
