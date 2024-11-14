@@ -26,6 +26,18 @@ The first tool in the suite, **MetaClean**, is a metadata management utility for
 - Removes unwanted metadata to ensure file privacy
 - Supports multiple file formats commonly used in office environments
 
+#### Dependencies
+
+
+### Formatify
+
+#### Features
+
+#### Dependencies 
+- pdflatex
+- wxPython
+- PyPDF2
+
 ## Installation
 
 To install the tools in this repository, follow these steps:

@@ -19,8 +19,10 @@
 import wx
 import os
 from PyPDF2 import PdfReader, PdfWriter
+from pdf2image import convert_from_path
 from fpdf import FPDF
-from docx2pdf import convert
+import pypandoc
+import pdflatex
 from docx import Document
 import pandas as pd
 from openpyxl import load_workbook
@@ -48,7 +50,9 @@ class FileConverterFrame(wx.Frame):
 
         # Botón para seleccionar archivo
         select_file_btn = wx.Button(panel, label="📄 Seleccionar Archivo", size=(250, 50))
+        select_file_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
         select_file_btn.Bind(wx.EVT_BUTTON, self.on_select_file)
+        select_file_btn.SetFont(select_file_font)
         main_sizer.Add(select_file_btn, 0, wx.ALL | wx.CENTER, 10)
 
         # Sizer para los botones dinámicos de conversión
@@ -60,7 +64,7 @@ class FileConverterFrame(wx.Frame):
         self.selected_file_path = None
 
     def on_select_file(self, event):
-        with wx.FileDialog(self, "Seleccione un archivo", wildcard="Archivos (*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png)|*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
+        with wx.FileDialog(self, "Seleccione un archivo", wildcard="Archivos (*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png;*.csv;*.txt)|*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png;*.csv;*.txt", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
             self.selected_file_path = file_dialog.GetPath()
@@ -73,11 +77,20 @@ class FileConverterFrame(wx.Frame):
         # Identificamos el tipo de archivo y generamos los botones de conversión correspondientes
         if filepath.endswith('.docx'):
             self.add_conversion_button("Convertir Word a PDF", self.convert_docx_to_pdf)
+            self.add_conversion_button("Convertir Word a Texto", self.convert_docx_to_text)
         elif filepath.endswith('.xlsx'):
             self.add_conversion_button("Convertir Excel a PDF", self.convert_xlsx_to_pdf)
             self.add_conversion_button("Convertir Excel a CSV", self.convert_xlsx_to_csv)
         elif filepath.endswith('.pdf'):
             self.add_conversion_button("Convertir PDF a Texto", self.convert_pdf_to_text)
+            self.add_conversion_button("Convertir PDF a Imagen (JPEG)", self.convert_pdf_to_jpeg)
+            self.add_conversion_button("Convertir PDF a Imagen (PNG)", self.convert_pdf_to_png)
+        elif filepath.endswith(('.jpeg', '.jpg', '.png')):
+            self.add_conversion_button("Convertir Imagen a PDF", self.convert_image_to_pdf)
+        elif filepath.endswith('.csv'):
+            self.add_conversion_button("Convertir CSV a Excel", self.convert_csv_to_xlsx)
+        elif filepath.endswith('.txt'):
+            self.add_conversion_button("Convertir Texto a PDF", self.convert_text_to_pdf)
 
         # Actualizamos la interfaz para mostrar los nuevos botones
         self.panel.Layout()
@@ -104,6 +117,21 @@ class FileConverterFrame(wx.Frame):
         
         pdf.output(output_path)
         wx.MessageBox(f"Conversión DOCX a PDF completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+
+    def convert_docx_to_text(self, event):
+        if not self.selected_file_path:
+            return
+        output_path = os.path.splitext(self.selected_file_path)[0] + ".txt"
+        
+        # Leer el archivo DOCX y guardar el texto en un archivo TXT
+        doc = Document(self.selected_file_path)
+        with open(output_path, "w") as text_file:
+            for para in doc.paragraphs:
+                text_file.write(para.text + "\n")
+                
+        
+        wx.MessageBox(f"Conversión DOCX a Texto completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+
 
     def convert_xlsx_to_pdf(self, event):
         if not self.selected_file_path:
@@ -151,6 +179,75 @@ class FileConverterFrame(wx.Frame):
                         text_file.write(text + "\n")
         
         wx.MessageBox(f"Conversión PDF a Texto completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+
+    def convert_pdf_to_jpeg(self, event):
+        if not self.selected_file_path:
+            return
+        output_dir = os.path.splitext(self.selected_file_path)[0] + "_images"
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Convertir PDF a imágenes JPEG
+        pages = convert_from_path(self.selected_file_path, dpi=200)
+        for i, page in enumerate(pages):
+            page.save(os.path.join(output_dir, f"page_{i + 1}.jpeg"), "JPEG")
+
+        wx.MessageBox(f"Conversión PDF a JPEG completa. Imágenes guardadas en {output_dir}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+    
+    def convert_pdf_to_png(self, event):
+        if not self.selected_file_path:
+            return
+        output_dir = os.path.splitext(self.selected_file_path)[0] + "_images"
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Convertir PDF a imágenes PNG
+        pages = convert_from_path(self.selected_file_path, dpi=200)
+        for i, page in enumerate(pages):
+            page.save(os.path.join(output_dir, f"page_{i + 1}.png"), "PNG")
+
+        wx.MessageBox(f"Conversión PDF a PNG completa. Imágenes guardadas en {output_dir}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+
+
+    def convert_image_to_pdf(self, event):
+        if not self.selected_file_path:
+            return
+        output_path = os.path.splitext(self.selected_file_path)[0] + ".pdf"
+        
+        image = Image.open(self.selected_file_path)
+        pdf_image = image.convert("RGB")
+        pdf_image.save(output_path)
+
+        wx.MessageBox(f"Conversión Imagen a PDF completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+
+    def convert_csv_to_xlsx(self, event):
+        if not self.selected_file_path:
+            return
+        output_path = os.path.splitext(self.selected_file_path)[0] + ".xlsx"
+        
+        # Leer CSV y guardar en un archivo Excel
+        df = pd.read_csv(self.selected_file_path)
+        df.to_excel(output_path, index=False)
+
+        wx.MessageBox(f"Conversión CSV a Excel completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+
+    def convert_text_to_pdf(self, event):
+        if not self.selected_file_path:
+            return
+        output_path = os.path.splitext(self.selected_file_path)[0] + ".pdf"
+        
+        # Leer contenido de archivo de texto y escribir en PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        
+        with open(self.selected_file_path, 'r') as file:
+            for line in file:
+                pdf.cell(0, 10, line.strip(), ln=True)
+        
+        pdf.output(output_path)
+        wx.MessageBox(f"Conversión Texto a PDF completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+
+
+
 
 if __name__ == "__main__":
     app = MainApp()
