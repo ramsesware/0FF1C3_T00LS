@@ -36,7 +36,7 @@ The first tool in the suite, **MetaClean**, is a metadata management utility for
 
 ```bash
 pip install wxPython PyPDF2 python-docx openpyxl python-pptx pillow piexif
-
+```
 ### Formatify
 
 **Formatify** is a versatile file conversion tool that allows users to convert various document types (e.g., PDF, DOCX, XLSX, images) into other formats. It provides a GUI for selecting files and initiating conversions, making it user-friendly for office tasks.
@@ -62,7 +62,7 @@ pip install wxPython PyPDF2 python-docx openpyxl python-pptx pillow piexif
 
 ```bash
 pip install wxPython PyPDF2 pdf2image fpdf python-docx pandas openpyxl pillow
-
+```
 
 
 
