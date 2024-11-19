@@ -1,7 +1,7 @@
 # OFFICE TOOLS
 
 <div align="center">
-    <img src="https://github.com/ramsesware/ramsesware/blob/main/images/Office_Tools_Logo_Pharaoh.png" />
+    <img src="https://github.com/ramsesware/ramsesware/blob/main/images/Office_Tools_Logo_Pharaoh.png" height=2048 />
 </div>
 
 ---
@@ -15,6 +15,8 @@
             ╚██████╔╝██║     ██║     ██║╚██████╗███████╗       ██║   ╚██████╔╝╚██████╔╝███████╗███████║
              ╚═════╝ ╚═╝     ╚═╝     ╚═╝ ╚═════╝╚══════╝       ╚═╝    ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
 ```
+
+---
 
 A collection of tools for office-related tasks. This repository will contain various utilities for document processing, file analysis, and data management in office environments.
 
