@@ -28,6 +28,7 @@ import zipfile
 import shutil
 import xml.etree.ElementTree as ET
 
+
 class MainApp(wx.App):
     def OnInit(self):
         self.frame = MetadataAnalyzerFrame(None, title="Metadata Analyzer", size=(800, 600))
@@ -170,6 +171,8 @@ def analyze_metadata(filepath):
         if filepath.endswith('.pdf'):
             with open(filepath, 'rb') as file:
                 pdf = PdfReader(file)
+                if pdf.is_encrypted:
+                    raise ValueError("El documento está firmado digitalmente. No se puede analizar.")
                 info = pdf.metadata
                 return info
         elif filepath.endswith('.docx'):
@@ -178,7 +181,7 @@ def analyze_metadata(filepath):
             return {
                 "Título": props.title or "N/A",
                 "Autor": props.author or "N/A",
-                "Autor anterior": props.last_modified_by or "N/A",
+                "Última modificación": props.last_modified_by or "N/A",
                 "Fecha de creación": props.created or "N/A",
                 "Última modificación": props.modified or "N/A",
                 "Categoría": props.category or "N/A",
@@ -187,15 +190,10 @@ def analyze_metadata(filepath):
         elif filepath.endswith('.xlsx'):
             workbook = load_workbook(filepath, read_only=True)
             props = workbook.properties
-            if props.creator == "openpyxl":
-                props.creator = None
-                props.created = None
-                props.modified = None
-            
             return {
                 "Título": props.title or "N/A",
                 "Autor": props.creator or "N/A",
-                "Autor anterior": props.lastModifiedBy or "N/A",
+                "Última modificación": props.lastModifiedBy or "N/A",
                 "Fecha de creación": props.created or "N/A",
                 "Última modificación": props.modified or "N/A",
                 "Categoría": props.category or "N/A",
@@ -207,14 +205,13 @@ def analyze_metadata(filepath):
             return {
                 "Título": props.title or "N/A",
                 "Autor": props.author or "N/A",
-                "Autor anterior": props.last_modified_by or "N/A",
+                "Última modificación": props.last_modified_by or "N/A",
                 "Fecha de creación": props.created or "N/A",
                 "Última modificación": props.modified or "N/A",
                 "Categoría": props.category or "N/A",
                 "Comentarios": props.comments or "N/A"
             }
-
-        elif filepath.endswith('.jpg') or filepath.endswith('.jpeg') or filepath.endswith('.png'):
+        elif filepath.endswith(('.jpg', '.jpeg', '.png')):
             image = Image.open(filepath)
             if "exif" in image.info:
                 exif_data = piexif.load(image.info["exif"])
@@ -224,17 +221,32 @@ def analyze_metadata(filepath):
                         tag_name = piexif.TAGS[ifd].get(tag, tag)
                         metadata[tag_name] = value
                 return metadata
+            else:
+                raise ValueError("No se encontraron metadatos EXIF.")
+        else:
+            raise ValueError("Formato de archivo no soportado para análisis de metadatos.")
+    except ValueError as ve:
+        wx.MessageBox(f"Advertencia: {ve}", "Error de análisis", wx.OK | wx.ICON_WARNING)
     except Exception as e:
-        wx.MessageBox(f"Error analizando metadatos: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        wx.MessageBox(f"Error inesperado al analizar los metadatos: {e}", "Error", wx.OK | wx.ICON_ERROR)
+
 
 def remove_metadata_pdf(filepath):
-    reader = PdfReader(filepath)
-    writer = PdfWriter()
-    for page in range(len(reader.pages)):
-        writer.add_page(reader.pages[page])
-    writer.add_metadata({})
-    with open(filepath, "wb") as f:
-        writer.write(f)
+    try:
+        reader = PdfReader(filepath)
+        if reader.is_encrypted:
+            raise ValueError("El documento PDF está firmado digitalmente. No se pueden eliminar los metadatos.")
+        writer = PdfWriter()
+        for page in range(len(reader.pages)):
+            writer.add_page(reader.pages[page])
+        writer.add_metadata({})
+        with open(filepath, "wb") as f:
+            writer.write(f)
+    except ValueError as ve:
+        wx.MessageBox(f"Advertencia: {ve}", "Error al eliminar metadatos", wx.OK | wx.ICON_WARNING)
+    except Exception as e:
+        wx.MessageBox(f"Error inesperado al eliminar metadatos del PDF: {e}", "Error", wx.OK | wx.ICON_ERROR)
+
 
 def remove_metadata_office(filepath):
     temp_dir = "temp_file"
@@ -280,17 +292,20 @@ def remove_metadata_file(filepath):
         extension = os.path.splitext(filepath)[1]
         if extension in ['.jpg', '.jpeg', '.png']:
             remove_metadata_image(filepath)
-            return f"Archivo: {os.path.basename(filepath)}  se han borrado los metadatos correctamente."
+            return f"Archivo: {os.path.basename(filepath)} - Los metadatos se eliminaron correctamente."
         elif extension == '.pdf':
             remove_metadata_pdf(filepath)
-            return f"Archivo: {os.path.basename(filepath)}  se han borrado los metadatos correctamente."
+            return f"Archivo: {os.path.basename(filepath)} - Los metadatos se eliminaron correctamente."
         elif extension in ['.docx', '.xlsx', '.pptx']:
             remove_metadata_office(filepath)
-            return f"Archivo: {os.path.basename(filepath)}  se han borrado los metadatos correctamente."
+            return f"Archivo: {os.path.basename(filepath)} - Los metadatos se eliminaron correctamente."
         else:
-            return f"El programa no soporta borrado de metadatos para la extension: {extension} de {os.path.basename(filepath)}"
+            raise ValueError(f"El programa no soporta la eliminación de metadatos para la extensión: {extension}")
+    except ValueError as ve:
+        wx.MessageBox(f"Advertencia: {ve}", "Error", wx.OK | wx.ICON_WARNING)
     except Exception as e:
-        wx.MessageBox(f"Error borrando los metadatos: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        wx.MessageBox(f"Error inesperado al eliminar los metadatos: {e}", "Error", wx.OK | wx.ICON_ERROR)
+
 
 def remove_metadata_directory(file_list):
     try:
