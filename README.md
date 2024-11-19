@@ -57,9 +57,10 @@ The first tool in the suite, **MetaClean**, is a metadata management utility for
 - `python-pptx`
 - `Pillow`
 - `piexif`
+- `Pycryptodome`
 
 ```bash
-pip install wxPython PyPDF2 python-docx openpyxl python-pptx pillow piexif
+pip install wxPython PyPDF2 python-docx openpyxl python-pptx pillow piexif Pycryptodome
 ```
 ### Formatify
 
