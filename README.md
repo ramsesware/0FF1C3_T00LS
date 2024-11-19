@@ -1,7 +1,7 @@
 # OFFICE TOOLS
 
 <div align="center">
-    <img src="https://github.com/ramsesware/ramsesware/blob/main/images/Office_Tools_Logo_Pharaoh.png" height=1024 weight=1024 />
+    <img src="https://github.com/ramsesware/ramsesware/blob/main/images/Office_Tools_Logo_Pharaoh.png" height=512 weight=512 />
 </div>
 
 ---
