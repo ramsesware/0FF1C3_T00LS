@@ -1,18 +1,9 @@
 # OFFICE TOOLS
 
-<style>
-    .rounded-img {
-        border-radius: 50%;
-        width: 512px;
-        height: 512px;
-        object-fit: cover;
-    }
-</style>
 
 <div align="center">
     <img 
-        src="https://github.com/ramsesware/ramsesware/blob/main/images/Office_Tools_Logo_Pharaoh.png" 
-        class="rounded-img" 
+        src="https://github.com/ramsesware/ramsesware/blob/main/images/Office_Tools_Logo_Pharaoh.png"  
     />
 </div>
 
