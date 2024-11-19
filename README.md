@@ -4,6 +4,8 @@
     <img src="https://github.com/ramsesware/ramsesware/blob/main/images/Office_Tools_Logo_Pharaoh.png" />
 </div>
 
+---
+
 A collection of tools for office-related tasks, designed to streamline document management, data cleaning, and metadata handling. This repository will contain various utilities for document processing, file analysis, and data management in office environments.
 
 ## Table of Contents
