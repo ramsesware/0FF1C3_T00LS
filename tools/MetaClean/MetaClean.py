@@ -244,8 +244,6 @@ def analyze_metadata(filepath):
             metadata = image.info
             return metadata
         
-        else:
-            raise ValueError("Formato de archivo no soportado para análisis de metadatos.")
     except ValueError as ve:
         wx.MessageBox(f"Advertencia: {ve}", "Error de análisis", wx.OK | wx.ICON_WARNING)
     except Exception as e:
