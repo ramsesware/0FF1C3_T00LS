@@ -88,7 +88,7 @@ class MetadataAnalyzerFrame(wx.Frame):
         panel.SetSizer(main_sizer)
 
     def on_select_file(self, event):
-        with wx.FileDialog(self, "Seleccione un archivo", wildcard="Archivos PDF (*.pdf)|*.pdf|Archivos Office (*.docx;*.xlsx;*.pptx)|*.docx;*.xlsx;*.pptx|Archivos imagen (*.jpeg;*.jpg;*.png)|*.jpeg;*.jpg;*.png", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
+        with wx.FileDialog(self, "Seleccione un archivo", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
             path = file_dialog.GetPath()
@@ -106,7 +106,7 @@ class MetadataAnalyzerFrame(wx.Frame):
             self.display_directory_metadata(analyze_metadata_directory(file_list))
             
     def on_remove_metadata_file(self, event):
-        with wx.FileDialog(self, "Seleccione un archivo", wildcard="Archivos PDF (*.pdf)|*.pdf|Archivos Office (*.docx;*.xlsx;*.pptx)|*.docx;*.xlsx;*.pptx|Archivos imagen (*.jpeg;*.jpg;*.png)|*.jpeg;*.jpg;*.png", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
+        with wx.FileDialog(self, "Seleccione un archivo", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
             path = file_dialog.GetPath()
