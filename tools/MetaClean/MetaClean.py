@@ -23,11 +23,15 @@ from docx import Document
 from openpyxl import load_workbook
 from pptx import Presentation
 from PIL import Image
-import piexif
 import zipfile
 import shutil
 from datetime import datetime
 import xml.etree.ElementTree as ET
+from mutagen import File as MutagenFile
+from hachoir.parser import createParser
+from hachoir.metadata import extractMetadata
+from hachoir.stream import FileOutputStream
+from hachoir.editor import createEditor
 
 
 class MainApp(wx.App):
@@ -199,7 +203,6 @@ def analyze_metadata(filepath):
             }
         elif filepath.endswith('.xlsx'):
             workbook = load_workbook(filepath, read_only=True)
-            metadata = []
             props = workbook.properties
             return {
                 "Identificador": props.identifier or "N/A",
@@ -260,6 +263,15 @@ def analyze_metadata(filepath):
                 "Grupo GID": estadisticas.st_gid or "N/A"
             }
             return metadata
+        elif filepath.endswith(('.mp3', '.flac', '.wav', '.ogg')):
+            audio = MutagenFile(filepath)
+            return audio.tags if audio else "No tags found"
+        elif filepath.endswith(('.mp4', '.mkv', '.avi', '.mov')):
+            parser = createParser(filepath)
+            if not parser:
+                return "Unable to parse video file"
+            metadata = extractMetadata(parser)
+            return metadata.exportDictionary() if metadata else "No metadata found"
         
     except ValueError as ve:
         wx.MessageBox(f"Advertencia: {ve}", "Error de análisis", wx.OK | wx.ICON_WARNING)
@@ -283,6 +295,33 @@ def remove_metadata_pdf(filepath):
     except Exception as e:
         wx.MessageBox(f"Error inesperado al eliminar metadatos del PDF: {e}", "Error", wx.OK | wx.ICON_ERROR)
 
+
+def remove_metadata_audio(filepath):
+    audio = MutagenFile(filepath, easy=True)
+    if not audio:
+        return f"No metadata found in {filepath}."
+    
+    audio.delete()
+    audio.save()
+
+
+def remove_metadata_video(filepath):
+
+    parser = createParser(filepath)
+    if not parser:
+        return f"Unable to parse video file {filepath}."
+    
+    editor = createEditor(parser)
+    if not editor:
+        return f"Unable to create editor for {filepath}."
+    
+    for field in list(editor.iterFields()):
+        editor.removeField(field)
+    
+    output_filepath = filepath.replace(".mp4", "_cleaned.mp4")  # Example for .mp4
+    with open(output_filepath, "wb") as output_file:
+        stream = FileOutputStream(output_file)
+        editor.writeInto(stream)
 
 def remove_metadata_office(filepath):
     temp_dir = "temp_file"
@@ -336,6 +375,12 @@ def remove_metadata_file(filepath):
         elif extension in ['.docx', '.xlsx', '.pptx']:
             remove_metadata_office(filepath)
             return f"Archivo: {os.path.basename(filepath)} - Los metadatos se eliminaron correctamente."
+        elif extension in ['.mp3', '.flac', '.wav', '.ogg']:
+            remove_metadata_audio(filepath)
+            return f"File: metadata from {os.path.basename(filepath)} has been removed correctly."
+        elif extension in ['.mp4', '.mkv', '.avi', '.mov']:
+            remove_metadata_video(filepath)
+            return f"File: metadata from {os.path.basename(filepath)} has been removed correctly."
         else:
             raise ValueError(f"El programa no soporta la eliminación de metadatos para la extensión: {extension}")
     except ValueError as ve:
