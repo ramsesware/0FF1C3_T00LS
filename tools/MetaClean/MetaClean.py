@@ -26,6 +26,7 @@ from PIL import Image
 import piexif
 import zipfile
 import shutil
+from datetime import datetime
 import xml.etree.ElementTree as ET
 
 
@@ -239,9 +240,25 @@ def analyze_metadata(filepath):
                 "Versión": props.version or "N/A"
             }
         elif filepath.endswith(('.jpg', '.jpeg', '.png')):
-            
             image = Image.open(filepath)
             metadata = image.info
+            return metadata
+        elif filepath.endswith('.zip'):
+            estadisticas = os.stat(filepath)
+            print(estadisticas)
+            metadata = {
+                "Ruta": os.path.abspath(filepath) or "N/A",
+                "Tamaño": estadisticas.st_size or "N/A",
+                "Fecha de creación": datetime.fromtimestamp(estadisticas.st_birthtime).strftime("%Y-%m-%d %H:%M:%S") or "N/A",
+                "Última modificación": datetime.fromtimestamp(estadisticas.st_mtime).strftime("%Y-%m-%d %H:%M:%S") or "N/A",
+                "Último acceso": datetime.fromtimestamp(estadisticas.st_atime).strftime("%Y-%m-%d %H:%M:%S") or "N/A",
+                "Modo permisos": estadisticas.st_mode or "N/A",  
+                "Número inodo": estadisticas.st_ino or "N/A",  
+                "Dispositivo": estadisticas.st_dev or "N/A",  
+                "Número enlaces": estadisticas.st_nlink or "N/A",  
+                "Propietario UID": estadisticas.st_uid or "N/A",
+                "Grupo GID": estadisticas.st_gid or "N/A"
+            }
             return metadata
         
     except ValueError as ve:
