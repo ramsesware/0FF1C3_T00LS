@@ -212,17 +212,11 @@ def analyze_metadata(filepath):
                 "Comentarios": props.comments or "N/A"
             }
         elif filepath.endswith(('.jpg', '.jpeg', '.png')):
+            
             image = Image.open(filepath)
-            if "exif" in image.info:
-                exif_data = piexif.load(image.info["exif"])
-                metadata = {}
-                for ifd in exif_data:
-                    for tag, value in exif_data[ifd].items():
-                        tag_name = piexif.TAGS[ifd].get(tag, tag)
-                        metadata[tag_name] = value
-                return metadata
-            else:
-                raise ValueError("No se encontraron metadatos EXIF.")
+            metadata = image.info
+            return metadata
+        
         else:
             raise ValueError("Formato de archivo no soportado para análisis de metadatos.")
     except ValueError as ve:
@@ -282,10 +276,11 @@ def remove_metadata_office(filepath):
     shutil.rmtree(temp_dir)
 
 def remove_metadata_image(filepath):
-    imagen = Image.open(filepath)
-    if "exif" in imagen.info:
-        imagen.info.pop("exif")
-    imagen.save(filepath)
+    image = Image.open(filepath)
+    info = image.info
+    if info:
+        image.info.clear()
+    image.save(filepath)
 
 def remove_metadata_file(filepath):
     try:
