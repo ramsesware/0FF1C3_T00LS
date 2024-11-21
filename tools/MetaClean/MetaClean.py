@@ -177,39 +177,66 @@ def analyze_metadata(filepath):
                 return info
         elif filepath.endswith('.docx'):
             doc = Document(filepath)
+            metadata = {}
             props = doc.core_properties
             return {
+                "Identificador": props.identifier or "N/A",
                 "Título": props.title or "N/A",
+                "Tema": props.subject or "N/A",
                 "Autor": props.author or "N/A",
                 "Última modificación": props.last_modified_by or "N/A",
                 "Fecha de creación": props.created or "N/A",
                 "Última modificación": props.modified or "N/A",
                 "Categoría": props.category or "N/A",
-                "Comentarios": props.comments or "N/A"
+                "Idioma": props.language or "N/A",
+                "Estado del contenido": props.content_status or "N/A",
+                "Palabras clave": props.keywords or "N/A",
+                "Revisión": props.revision or "N/A",
+                "Última impresión": props.last_printed or "N/A",
+                "Comentarios": props.comments or "N/A",
+                "Versión": props.version or "N/A"
             }
         elif filepath.endswith('.xlsx'):
             workbook = load_workbook(filepath, read_only=True)
+            metadata = []
             props = workbook.properties
             return {
+                "Identificador": props.identifier or "N/A",
                 "Título": props.title or "N/A",
+                "Tema": props.subject or "N/A",
+                "Descripción": props.description or "N/A",
                 "Autor": props.creator or "N/A",
                 "Última modificación": props.lastModifiedBy or "N/A",
                 "Fecha de creación": props.created or "N/A",
                 "Última modificación": props.modified or "N/A",
                 "Categoría": props.category or "N/A",
-                "Comentarios": props.description or "N/A"
+                "Idioma": props.language or "N/A",
+                "Estado del contenido": props.contentStatus or "N/A",
+                "Palabras clave": props.keywords or "N/A",
+                "Revisión": props.revision or "N/A",
+                "Última impresión": props.lastPrinted or "N/A",
+                "Versión": props.version or "N/A"
             }
         elif filepath.endswith('.pptx'):
             presentation = Presentation(filepath)
             props = presentation.core_properties
             return {
+                "Identificador": props.identifier or "N/A",
                 "Título": props.title or "N/A",
+                "Tema": props.subject or "N/A",
                 "Autor": props.author or "N/A",
                 "Última modificación": props.last_modified_by or "N/A",
                 "Fecha de creación": props.created or "N/A",
                 "Última modificación": props.modified or "N/A",
                 "Categoría": props.category or "N/A",
-                "Comentarios": props.comments or "N/A"
+                "Idioma": props.language or "N/A",
+                "Estado del contenido": props.content_status or "N/A",
+                "Tipo de contenido": props.content_type or "N/A",
+                "Palabras clave": props.keywords or "N/A",
+                "Revisión": props.revision or "N/A",
+                "Última impresión": props.last_printed or "N/A",
+                "Comentarios": props.comments or "N/A",
+                "Versión": props.version or "N/A"
             }
         elif filepath.endswith(('.jpg', '.jpeg', '.png')):
             
