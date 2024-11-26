@@ -62,7 +62,7 @@ The first tool in the suite, **MetaClean**, is a metadata management utility for
 
 
 ```bash
-pip install wxPython PyPDF2 python-docx openpyxl python-pptx Pycryptodome hachoir mutagen
+pip install wxPython PyPDF2 python-docx openpyxl python-pptx Pycryptodome hachoir mutagen Pillow
 ```
 ### Formatify
 
