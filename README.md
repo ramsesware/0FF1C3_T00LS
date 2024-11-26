@@ -58,6 +58,8 @@ The first tool in the suite, **MetaClean**, is a metadata management utility for
 - `Pycryptodome`
 - `hachoir`
 - `mutagen`
+- `Pillow`
+
 
 ```bash
 pip install wxPython PyPDF2 python-docx openpyxl python-pptx Pycryptodome hachoir mutagen
