@@ -36,7 +36,7 @@ from hachoir.editor import createEditor
 
 class MainApp(wx.App):
     def OnInit(self):
-        self.frame = MetadataAnalyzerFrame(None, title="Metadata Analyzer", size=(800, 600))
+        self.frame = MetadataAnalyzerFrame(None, title="MetaClean", size=(800, 600))
         self.frame.Show()
         return True
 
