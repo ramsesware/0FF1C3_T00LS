@@ -60,10 +60,16 @@ The first tool in the suite, **MetaClean**, is a metadata management utility for
 - `mutagen`
 - `Pillow`
 
+#### How to install
 
 ```bash
 pip install wxPython PyPDF2 python-docx openpyxl python-pptx Pycryptodome hachoir mutagen Pillow
 ```
+
+```
+If you prefer, you can download MetaClean.exe and you just have to install Python and execute
+```
+
 ### Formatify
 
 **Formatify** is a versatile file conversion tool that allows users to convert various document types (e.g., PDF, DOCX, XLSX, images) into other formats. It provides a GUI for selecting files and initiating conversions, making it user-friendly for office tasks.
@@ -86,6 +92,8 @@ pip install wxPython PyPDF2 python-docx openpyxl python-pptx Pycryptodome hachoi
 - `pandas`
 - `openpyxl`
 - `Pillow`
+
+#### How to install
 
 ```bash
 pip install wxPython PyPDF2 pdf2image fpdf python-docx pandas openpyxl pillow
