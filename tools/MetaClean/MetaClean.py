@@ -97,7 +97,7 @@ class MetadataAnalyzerFrame(wx.Frame):
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
             path = file_dialog.GetPath()
-            metadata = analyze_metadata(path)
+            metadata = analyze_metadata(self, path)
             self.display_metadata(metadata)
 
     def on_select_directory(self, event):
@@ -108,14 +108,14 @@ class MetadataAnalyzerFrame(wx.Frame):
             if not directory_path:
                 return None  
             file_list = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-            self.display_directory_metadata(analyze_metadata_directory(file_list))
+            self.display_directory_metadata(analyze_metadata_directory(self, file_list))
             
     def on_remove_metadata_file(self, event):
         with wx.FileDialog(self, "Seleccione un archivo", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
             path = file_dialog.GetPath()
-            result = remove_metadata_file(path)
+            result = remove_metadata_file(self, path)
             self.display_result(result)
 
     def on_remove_metadata_directory(self, event):
@@ -126,7 +126,7 @@ class MetadataAnalyzerFrame(wx.Frame):
             if not directory_path:
                 return None  
             file_list = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-            results = remove_metadata_directory(file_list)
+            results = remove_metadata_directory(self, file_list)
             self.display_directory_results(results)
 
     def on_clear_results(self, event):
@@ -138,14 +138,14 @@ class MetadataAnalyzerFrame(wx.Frame):
             for key, value in data.items():
                 self.result_text_metadata.AppendText(f"{key}: {value}\n")
         else:
-            wx.MessageBox("No se encontraron metadatos o el archivo seleccionado es inválido.", "Advertencia", wx.OK | wx.ICON_WARNING)
+            self.result_text_metadata.AppendText("Advertencia: No se encontraron metadatos o el archivo seleccionado es inválido.")
 
     def display_result(self, data):
         self.result_text_metadata.Clear()
         if data:
             self.result_text_metadata.AppendText(f"{data}\n")
         else:
-            wx.MessageBox("No se pudo eliminar los metadatos o el archivo seleccionado es inválido.", "Advertencia", wx.OK | wx.ICON_WARNING)
+            self.result_text_metadata.AppendText("Advertencia: No se pudo eliminar los metadatos o el archivo seleccionado es inválido.")
 
     def display_directory_metadata(self, data):
         self.result_text_metadata.Clear()
@@ -161,7 +161,7 @@ class MetadataAnalyzerFrame(wx.Frame):
                     self.result_text_metadata.AppendText(f"  {metadata}\n")
                 self.result_text_metadata.AppendText("\n" + "-" * 40 + "\n\n")
         else:
-            wx.MessageBox("No se encontraron metadatos o no se seleccionaron archivos válidos.", "Advertencia", wx.OK | wx.ICON_WARNING)
+            self.result_text_metadata.AppendText("Advertencia: No se encontraron metadatos o no se seleccionaron archivos válidos.")
 
     def display_directory_results(self, data):
         self.result_text_metadata.Clear()
@@ -169,15 +169,15 @@ class MetadataAnalyzerFrame(wx.Frame):
             for message in data:
                 self.result_text_metadata.AppendText(f"{message}\n")
         else:
-            wx.MessageBox("No se pudo eliminar los metadatos o la selección fue inválida.", "Advertencia", wx.OK | wx.ICON_WARNING)
+            self.result_text_metadata.AppendText("Advertencia: No se pudo eliminar los metadatos o la selección fue inválida.")
 
-def analyze_metadata(filepath):
+def analyze_metadata(self, filepath):
     try:
         if filepath.endswith('.pdf'):
             with open(filepath, 'rb') as file:
                 pdf = PdfReader(file)
                 if pdf.is_encrypted:
-                    raise ValueError("El documento está firmado digitalmente. No se puede analizar.")
+                    self.result_text_metadata.AppendText("Advertencia: El documento está firmado digitalmente. No se puede analizar.")
                 info = pdf.metadata
                 return info
         elif filepath.endswith('.docx'):
@@ -273,27 +273,23 @@ def analyze_metadata(filepath):
             metadata = extractMetadata(parser)
             return metadata.exportDictionary() if metadata else "No metadata found"
         
-    except ValueError as ve:
-        wx.MessageBox(f"Advertencia: {ve}", "Error de análisis", wx.OK | wx.ICON_WARNING)
     except Exception as e:
-        wx.MessageBox(f"Error inesperado al analizar los metadatos: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        self.result_text_metadata.AppendText(f"ERROR: Error inesperado al analizar los metadatos: {e}")
 
 
-def remove_metadata_pdf(filepath):
+def remove_metadata_pdf(self, filepath):
     try:
         reader = PdfReader(filepath)
         if reader.is_encrypted:
-            raise ValueError("El documento PDF está firmado digitalmente. No se pueden eliminar los metadatos.")
+            self.result_text_metadata.AppendText("Advertencia: El documento PDF está firmado digitalmente. No se pueden eliminar los metadatos.")
         writer = PdfWriter()
         for page in range(len(reader.pages)):
             writer.add_page(reader.pages[page])
         writer.add_metadata({})
         with open(filepath, "wb") as f:
-            writer.write(f)
-    except ValueError as ve:
-        wx.MessageBox(f"Advertencia: {ve}", "Error al eliminar metadatos", wx.OK | wx.ICON_WARNING)
+            writer.write(f)    
     except Exception as e:
-        wx.MessageBox(f"Error inesperado al eliminar metadatos del PDF: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        self.result_text_metadata.AppendText(f"ERROR: Error inesperado al eliminar metadatos del PDF: {e}")
 
 
 def remove_metadata_audio(filepath):
@@ -323,7 +319,7 @@ def remove_metadata_video(filepath):
         stream = FileOutputStream(output_file)
         editor.writeInto(stream)
 
-def remove_metadata_office(filepath):
+def remove_metadata_office(self, filepath):
     temp_dir = "temp_file"
     file_extension = filepath.split('.')[-1]
     
@@ -337,7 +333,7 @@ def remove_metadata_office(filepath):
     }
     
     if file_extension not in metadata_files:
-        raise ValueError("Formato de archivo no soportado para eliminación de metadatos")
+        self.result_text_metadata.AppendText("Formato de archivo no soportado para eliminación de metadatos")
     
     for meta_file in metadata_files[file_extension]:
         meta_path = os.path.join(temp_dir, meta_file)
@@ -363,17 +359,17 @@ def remove_metadata_image(filepath):
         image.info.clear()
     image.save(filepath)
 
-def remove_metadata_file(filepath):
+def remove_metadata_file(self, filepath):
     try:
         extension = os.path.splitext(filepath)[1]
         if extension in ['.jpg', '.jpeg', '.png']:
             remove_metadata_image(filepath)
             return f"Archivo: {os.path.basename(filepath)} - Los metadatos se eliminaron correctamente."
         elif extension == '.pdf':
-            remove_metadata_pdf(filepath)
+            remove_metadata_pdf(self, filepath)
             return f"Archivo: {os.path.basename(filepath)} - Los metadatos se eliminaron correctamente."
         elif extension in ['.docx', '.xlsx', '.pptx']:
-            remove_metadata_office(filepath)
+            remove_metadata_office(self, filepath)
             return f"Archivo: {os.path.basename(filepath)} - Los metadatos se eliminaron correctamente."
         elif extension in ['.mp3', '.flac', '.wav', '.ogg']:
             remove_metadata_audio(filepath)
@@ -382,34 +378,32 @@ def remove_metadata_file(filepath):
             remove_metadata_video(filepath)
             return f"File: metadata from {os.path.basename(filepath)} has been removed correctly."
         else:
-            raise ValueError(f"El programa no soporta la eliminación de metadatos para la extensión: {extension}")
-    except ValueError as ve:
-        wx.MessageBox(f"Advertencia: {ve}", "Error", wx.OK | wx.ICON_WARNING)
+            self.result_text_metadata.AppendText(f"El programa no soporta la eliminación de metadatos para la extensión: {extension}")
     except Exception as e:
-        wx.MessageBox(f"Error inesperado al eliminar los metadatos: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        self.result_text_metadata.AppendText(f"ERROR: Error inesperado al eliminar los metadatos: {e}")
 
 
-def remove_metadata_directory(file_list):
+def remove_metadata_directory(self, file_list):
     try:
         info_list = []
         for file in file_list:
-            info_list.append(remove_metadata_file(file))
+            info_list.append(remove_metadata_file(self, file))
         return info_list
     except Exception as e:
-        wx.MessageBox(f"Error removing metadata from directory: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        self.result_text_metadata.AppendText(f"ERROR: Error removing metadata from directory: {e}")
 
-def analyze_metadata_directory(file_list):
+def analyze_metadata_directory(self, file_list):
     try:
         info_list = []
         for file_read in file_list:
-            info = analyze_metadata(file_read)
+            info = analyze_metadata(self, file_read)
             info_list.append({
                 "filename": file_read,
                 "metadata": info
             })
         return info_list
     except Exception as e:
-        wx.MessageBox(f"Error analyzing files in directory: {e}", "Error", wx.OK | wx.ICON_ERROR)
+        self.result_text_metadata.AppendText(f"ERROR: Error analyzing files in directory: {e}")
 
 def clear_results_metadata(result_text):
     result_text.Clear()
