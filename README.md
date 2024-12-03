@@ -69,6 +69,7 @@ pip install wxPython PyPDF2 python-docx openpyxl python-pptx Pycryptodome hachoi
 ```
 If you prefer, you can download MetaClean.exe and you just have to install Python and execute
 ```
+--- 
 
 ### Formatify
 
