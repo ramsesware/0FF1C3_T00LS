@@ -36,7 +36,7 @@ from hachoir.editor import createEditor
 
 class MainApp(wx.App):
     def OnInit(self):
-        self.frame = MetadataAnalyzerFrame(None, title="MetaClean", size=(800, 600))
+        self.frame = MetadataAnalyzerFrame(None, title="MetaClean", size=(1000, 800))
         self.frame.Show()
         return True
 
@@ -44,40 +44,41 @@ class MetadataAnalyzerFrame(wx.Frame):
     def __init__(self, *args, **kw):
         super(MetadataAnalyzerFrame, self).__init__(*args, **kw)
         
-        panel = wx.Panel(self)
-        main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.panel = wx.Panel(self)
+        self.main_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.directory_metadata = []
 
-        instructions = wx.StaticText(panel, label="Seleccione una acción para analizar o limpiar los metadatos de archivos.")
+        instructions = wx.StaticText(self.panel, label="Seleccione una acción para analizar o limpiar los metadatos de archivos.")
         instruction_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
         instructions.SetFont(instruction_font)
-        main_sizer.Add(instructions, 0, wx.ALL | wx.CENTER, 10)
+        self.main_sizer.Add(instructions, 0, wx.ALL | wx.CENTER, 10)
         
         buttons_sizer = wx.GridBagSizer(10, 10) 
         
         button_font = wx.Font(11, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
         button_size = (250, 50)
         
-        select_file_btn = wx.Button(panel, label="📄 Seleccionar Archivo", size=button_size)
+        select_file_btn = wx.Button(self.panel, label="📄 Seleccionar Archivo", size=button_size)
         select_file_btn.SetFont(button_font)
         select_file_btn.Bind(wx.EVT_BUTTON, self.on_select_file)
         buttons_sizer.Add(select_file_btn, pos=(0, 0), flag=wx.EXPAND | wx.ALL, border=5)
         
-        remove_file_btn = wx.Button(panel, label="🗑️ Eliminar Metadatos (Archivo)", size=button_size)
+        remove_file_btn = wx.Button(self.panel, label="🗑️ Eliminar Metadatos (Archivo)", size=button_size)
         remove_file_btn.SetFont(button_font)
         remove_file_btn.Bind(wx.EVT_BUTTON, self.on_remove_metadata_file)
         buttons_sizer.Add(remove_file_btn, pos=(1, 0), flag=wx.EXPAND | wx.ALL, border=5)
         
-        select_directory_btn = wx.Button(panel, label="📂 Seleccionar Carpeta", size=button_size)
+        select_directory_btn = wx.Button(self.panel, label="📂 Seleccionar Carpeta", size=button_size)
         select_directory_btn.SetFont(button_font)
         select_directory_btn.Bind(wx.EVT_BUTTON, self.on_select_directory)
         buttons_sizer.Add(select_directory_btn, pos=(0, 1), flag=wx.EXPAND | wx.ALL, border=5)
         
-        remove_directory_btn = wx.Button(panel, label="🗑️📂 Eliminar Metadatos (Carpeta)", size=button_size)
+        remove_directory_btn = wx.Button(self.panel, label="🗑️📂 Eliminar Metadatos (Carpeta)", size=button_size)
         remove_directory_btn.SetFont(button_font)
         remove_directory_btn.Bind(wx.EVT_BUTTON, self.on_remove_metadata_directory)
         buttons_sizer.Add(remove_directory_btn, pos=(1, 1), flag=wx.EXPAND | wx.ALL, border=5)
         
-        clear_results_btn = wx.Button(panel, label="🧹 Limpiar Resultados", size=button_size)
+        clear_results_btn = wx.Button(self.panel, label="🧹 Limpiar Resultados", size=button_size)
         clear_results_btn.SetFont(button_font)
         clear_results_btn.Bind(wx.EVT_BUTTON, self.on_clear_results)
         buttons_sizer.Add(clear_results_btn, pos=(2, 0), span=(1,2), flag=wx.EXPAND | wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, border=5)
@@ -85,14 +86,20 @@ class MetadataAnalyzerFrame(wx.Frame):
         buttons_sizer.AddGrowableCol(0, 1)
         buttons_sizer.AddGrowableCol(1, 1)
         
-        main_sizer.Add(buttons_sizer, 0, wx.ALL | wx.CENTER, 15)
+        self.main_sizer.Add(buttons_sizer, 0, wx.ALL | wx.CENTER, 15)
+
+        result_label = wx.StaticText(self.panel, label="Resultado:")
+        result_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+        result_label.SetFont(result_font)
+        self.main_sizer.Add(result_label, 0, wx.ALL | wx.EXPAND, 5)
         
-        self.result_text_metadata = wx.TextCtrl(panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL, size=(750, 250))
-        main_sizer.Add(self.result_text_metadata, 1, wx.ALL | wx.EXPAND, 10)
+        self.result_text_metadata = wx.TextCtrl(self.panel, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL, size=(750, 250))
+        self.main_sizer.Add(self.result_text_metadata, 1, wx.ALL | wx.EXPAND, 10)
         
-        panel.SetSizer(main_sizer)
+        self.panel.SetSizer(self.main_sizer)
 
     def on_select_file(self, event):
+        self.remove_listbox()
         with wx.FileDialog(self, "Seleccione un archivo", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
@@ -107,10 +114,66 @@ class MetadataAnalyzerFrame(wx.Frame):
             directory_path = dir_dialog.GetPath()
             if not directory_path:
                 return None  
-            file_list = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-            self.display_directory_metadata(analyze_metadata_directory(self, file_list))
             
+            file_list = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
+            metadata = analyze_metadata_directory(self, file_list)
+            self.display_directory_metadata(metadata)
+
+            
+            tags = set()
+            for file_data in metadata:
+                metadata_dict = file_data.get("metadata", {})
+                if isinstance(metadata_dict, dict):
+                    tags.update(metadata_dict.keys())
+            
+            # Create and populate the ListBox dynamically
+            self.add_listbox(list(tags))
+
+    def add_listbox(self, tags):
+
+        label_listbox = wx.StaticText(self.panel, label="Búsqueda por etiqueta:")
+        label_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+        label_listbox.SetFont(label_font)
+        self.main_sizer.Add(label_listbox, 0, wx.ALL | wx.EXPAND, 5)
+
+        self.metadata_tags_listbox = wx.ListBox(self.panel, choices=tags, style=wx.LB_SINGLE)
+        self.metadata_tags_listbox.Bind(wx.EVT_LISTBOX, self.on_tag_selected)
+        self.main_sizer.Add(self.metadata_tags_listbox, 0, wx.ALL | wx.EXPAND, 10)
+        self.panel.Layout()
+
+    def remove_listbox(self):
+        if hasattr(self, "metadata_tags_listbox") and self.metadata_tags_listbox:
+            self.main_sizer.Detach(self.metadata_tags_listbox)
+            self.metadata_tags_listbox.Destroy()
+            self.metadata_tags_listbox = None
+            self.panel.Layout()
+
+    def on_tag_selected(self, event):
+        selected_tag = self.metadata_tags_listbox.GetStringSelection()
+        if selected_tag:
+            self.filter_metadata_by_tag(selected_tag)
+
+    def filter_metadata_by_tag(self, tag):
+        self.result_text_metadata.Clear()
+        all_values = []
+
+        # Collect all values for the selected tag
+        for file_data in self.directory_metadata:
+            filename = file_data.get("filename", "Archivo desconocido")
+            metadata = file_data.get("metadata", {})
+            if isinstance(metadata, dict) and tag in metadata:
+                all_values.append((filename, metadata[tag]))
+
+        # Display the collected values
+        if all_values:
+            for filename, value in all_values:
+                self.result_text_metadata.AppendText(f"Archivo: {filename}\n")
+                self.result_text_metadata.AppendText(f"  {tag}: {value}\n\n")
+        else:
+            self.result_text_metadata.AppendText(f"No se encontraron valores para la etiqueta: {tag}")
+
     def on_remove_metadata_file(self, event):
+        self.remove_listbox()
         with wx.FileDialog(self, "Seleccione un archivo", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
@@ -119,6 +182,7 @@ class MetadataAnalyzerFrame(wx.Frame):
             self.display_result(result)
 
     def on_remove_metadata_directory(self, event):
+        self.remove_listbox()
         with wx.DirDialog(self, "Seleccione una carpeta") as dir_dialog:
             if dir_dialog.ShowModal() == wx.ID_CANCEL:
                 return
@@ -130,7 +194,9 @@ class MetadataAnalyzerFrame(wx.Frame):
             self.display_directory_results(results)
 
     def on_clear_results(self, event):
+        self.remove_listbox()
         self.result_text_metadata.Clear()
+        self.directory_metadata = []
 
     def display_metadata(self, data):
         self.result_text_metadata.Clear()
@@ -148,6 +214,7 @@ class MetadataAnalyzerFrame(wx.Frame):
             self.result_text_metadata.AppendText("Advertencia: No se pudo eliminar los metadatos o el archivo seleccionado es inválido.")
 
     def display_directory_metadata(self, data):
+        self.directory_metadata = data  # Save the full metadata for filtering
         self.result_text_metadata.Clear()
         if data:
             for file_data in data:
