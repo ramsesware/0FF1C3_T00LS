@@ -44,6 +44,28 @@ class MetadataAnalyzerFrame(wx.Frame):
     def __init__(self, *args, **kw):
         super(MetadataAnalyzerFrame, self).__init__(*args, **kw)
         
+        self.current_theme = "Claro"
+
+        self.menu_bar = wx.MenuBar()
+        options_menu = wx.Menu()
+
+        appearance_menu = wx.Menu()
+        light_mode_item = appearance_menu.Append(wx.ID_ANY, "Claro", "Cambiar a tema claro")
+        dark_mode_item = appearance_menu.Append(wx.ID_ANY, "Oscuro", "Cambiar a tema oscuro")
+
+        options_menu.AppendSubMenu(appearance_menu, "Apariencia")
+        self.menu_bar.Append(options_menu, "Opciones")
+        self.SetMenuBar(self.menu_bar)
+
+        # Bind eventos para cambiar tema
+        self.Bind(wx.EVT_MENU, self.set_light_mode, light_mode_item)
+        self.Bind(wx.EVT_MENU, self.set_dark_mode, dark_mode_item)
+
+        self.init_ui()
+        self.apply_theme(self.current_theme)
+
+
+    def init_ui(self):
         self.panel = wx.Panel(self)
         self.main_sizer = wx.BoxSizer(wx.VERTICAL)
         self.directory_metadata = []
@@ -114,6 +136,50 @@ class MetadataAnalyzerFrame(wx.Frame):
         
         self.panel.SetSizer(self.main_sizer)
 
+
+    def apply_theme(self, theme):
+        self.current_theme = theme
+
+        if theme == "Claro":
+            bg_color = wx.Colour(255, 255, 255)
+            text_color = wx.Colour(0, 0, 0)
+            button_bg_color = wx.Colour(240, 240, 240)
+            button_text_color = wx.Colour(0, 0, 0)
+            result_bg_color = wx.Colour(240, 240, 240)
+        else:  
+            bg_color = wx.Colour(45, 45, 45)
+            text_color = wx.Colour(200, 200, 200)
+            button_bg_color = wx.Colour(60, 60, 60)
+            button_text_color = wx.Colour(255, 255, 255)
+            result_bg_color = wx.Colour(30, 30, 30)
+
+        self.panel.SetBackgroundColour(bg_color)
+
+        for child in self.panel.GetChildren():
+            if isinstance(child, wx.Button):
+                child.SetBackgroundColour(button_bg_color)
+                child.SetForegroundColour(button_text_color)
+
+        self.result_text_metadata.SetBackgroundColour(result_bg_color)
+        self.result_text_metadata.SetForegroundColour(text_color)
+
+        for child in self.panel.GetChildren():
+            if isinstance(child, wx.StaticText):
+                child.SetForegroundColour(text_color)
+
+        self.apply_listbox_theme()
+
+        self.panel.Refresh()
+
+    def set_light_mode(self, event):
+        self.current_theme = "Claro"
+        self.apply_theme(self.current_theme)
+
+    def set_dark_mode(self, event):
+        self.current_theme = "Oscuro"
+        self.apply_theme(self.current_theme)
+        
+
     def on_select_file(self, event):
         self.remove_listbox()
         with wx.FileDialog(self, "Seleccione un archivo", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
@@ -144,18 +210,20 @@ class MetadataAnalyzerFrame(wx.Frame):
 
 
     def add_listbox(self, tags):
-
         self.remove_listbox()
 
         self.label_listbox = wx.StaticText(self.panel, label="Búsqueda por etiqueta:")
         label_font = wx.Font(12, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
         self.label_listbox.SetFont(label_font)
+        self.label_listbox.SetForegroundColour(wx.Colour(200, 200, 200) if self.current_theme == "Oscuro" else wx.Colour(0, 0, 0))
         self.main_sizer.Add(self.label_listbox, 0, wx.ALL | wx.EXPAND, 5)
 
         self.metadata_tags_listbox = wx.ListBox(self.panel, choices=tags, style=wx.LB_SINGLE)
+        self.apply_listbox_theme() 
         self.metadata_tags_listbox.Bind(wx.EVT_LISTBOX, self.on_tag_selected)
         self.main_sizer.Add(self.metadata_tags_listbox, 0, wx.ALL | wx.EXPAND, 10)
         self.panel.Layout()
+
 
     def remove_listbox(self):
         if hasattr(self, "metadata_tags_listbox") and self.metadata_tags_listbox:
@@ -166,6 +234,16 @@ class MetadataAnalyzerFrame(wx.Frame):
             self.metadata_tags_listbox.Destroy()
             self.metadata_tags_listbox = None
             self.panel.Layout()
+
+    def apply_listbox_theme(self):
+        if hasattr(self, "metadata_tags_listbox") and self.metadata_tags_listbox:
+            if self.current_theme == "Oscuro":
+                self.metadata_tags_listbox.SetBackgroundColour(wx.Colour(30, 30, 30))
+                self.metadata_tags_listbox.SetForegroundColour(wx.Colour(200, 200, 200))
+            else:
+                self.metadata_tags_listbox.SetBackgroundColour(wx.Colour(240, 240, 240))
+                self.metadata_tags_listbox.SetForegroundColour(wx.Colour(0, 0, 0))
+
 
     def on_tag_selected(self, event):
         selected_tag = self.metadata_tags_listbox.GetStringSelection()
@@ -221,19 +299,30 @@ class MetadataAnalyzerFrame(wx.Frame):
             wx.MessageBox("Por favor, introduzca un texto para buscar.", "Sin texto", wx.OK | wx.ICON_WARNING)
             return
 
-        results = self.result_text_metadata.GetValue().splitlines()
-        found_lines = []
+        found_results = []
 
-        for i, line in enumerate(results, start=1):
-            if search_text.lower() in line.lower(): 
-                found_lines.append((i, line.strip()))
+        for file_data in self.directory_metadata:
+            filename = file_data.get("filename", "Archivo desconocido")
+            metadata = file_data.get("metadata", {})
+            metadata_text = ""
 
-        if found_lines:
-            self.result_text_metadata.Clear()
-            for line_number, line_content in found_lines:
-                self.result_text_metadata.AppendText(f"Línea {line_number}: {line_content}\n")
+            # Convertir todo el contenido de los metadatos en una cadena de texto
+            if isinstance(metadata, dict):
+                metadata_text = "\n".join(f"{key}: {value}" for key, value in metadata.items())
+            elif isinstance(metadata, str):
+                metadata_text = metadata  # Si es un string ya está listo
+
+            # Buscar el texto en el contenido
+            if search_text.lower() in metadata_text.lower():
+                found_results.append(f"Archivo: {filename}\n{metadata_text}\n")
+
+        self.result_text_metadata.Clear()
+        if found_results:
+            for result in found_results:
+                self.result_text_metadata.AppendText(result + "\n")
         else:
             wx.MessageBox(f"No se encontró el texto '{search_text}' en los resultados.", "Sin coincidencias", wx.OK | wx.ICON_INFORMATION)
+
 
 
     def display_metadata(self, data):
