@@ -30,7 +30,7 @@ A collection of tools for office-related tasks. This repository will contain var
 
 - [About](#about)
 - [Tools](#tools)
-  - [MetaClean](#metaclean)
+  - [ThotClean](#thotclean)
   - [Formatify](#formatify)
 - [License](#license)
 
@@ -40,9 +40,9 @@ A collection of tools for office-related tasks. This repository will contain var
 
 ## Tools
 
-### MetaClean
+### ThotClean
 
-The first tool in the suite, **MetaClean**, is a metadata management utility for documents. MetaClean is designed to help analyze and remove metadata from various document formats, enhancing privacy and security. This tool is especially useful for users who want to ensure sensitive metadata is not unintentionally shared in files.
+The first tool in the suite, **ThotClean**, is a metadata management utility for documents. ThotClean is designed to help analyze and remove metadata from various document formats, enhancing privacy and security. This tool is especially useful for users who want to ensure sensitive metadata is not unintentionally shared in files.
 
 #### Features
 - Analyzes metadata in supported document formats (PDF, DOCX, XLSX, PPTX, and image files).
@@ -67,7 +67,7 @@ pip install wxPython PyPDF2 python-docx openpyxl python-pptx Pycryptodome hachoi
 ```
 
 ```
-If you prefer, you can download MetaClean.exe and you just have to install Python and execute
+If you prefer, you can download ThotClean.exe and you just have to install Python and execute
 ```
 --- 
 
