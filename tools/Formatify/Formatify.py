@@ -64,7 +64,7 @@ class FileConverterFrame(wx.Frame):
         self.selected_file_path = None
 
     def on_select_file(self, event):
-        with wx.FileDialog(self, "Seleccione un archivo", wildcard="Archivos (*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png;*.csv;*.txt)|*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png;*.csv;*.txt", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
+        with wx.FileDialog(self, "Seleccione un archivo", wildcard="Archivos (*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png;*.csv;*.txt;*.html)|*.pdf;*.docx;*.xlsx;*.jpeg;*.jpg;*.png;*.csv;*.txt;*.html", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST) as file_dialog:
             if file_dialog.ShowModal() == wx.ID_CANCEL:
                 return
             self.selected_file_path = file_dialog.GetPath()
@@ -91,6 +91,8 @@ class FileConverterFrame(wx.Frame):
             self.add_conversion_button("Convertir CSV a Excel", self.convert_csv_to_xlsx)
         elif filepath.endswith('.txt'):
             self.add_conversion_button("Convertir Texto a PDF", self.convert_text_to_pdf)
+        elif filepath.endswith('.html'):
+            self.add_conversion_button("Convertir HTML a PDF", self.convert_html_to_pdf)
 
         # Actualizamos la interfaz para mostrar los nuevos botones
         self.panel.Layout()
@@ -246,6 +248,17 @@ class FileConverterFrame(wx.Frame):
         pdf.output(output_path)
         wx.MessageBox(f"Conversión Texto a PDF completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
 
+    def convert_html_to_pdf(self, event):
+        if not self.selected_file_path:
+            return
+        output_path = os.path.splitext(self.selected_file_path)[0] + ".pdf"
+
+        try:
+            # Convertir HTML a PDF usando pypandoc
+            pypandoc.convert_file(self.selected_file_path, 'pdf', outputfile=output_path)
+            wx.MessageBox(f"Conversión HTML a PDF completa. Archivo guardado en {output_path}.", "Conversión Exitosa", wx.OK | wx.ICON_INFORMATION)
+        except Exception as e:
+            wx.MessageBox(f"Error al convertir HTML a PDF: {str(e)}", "Error", wx.OK | wx.ICON_ERROR)
 
 
 
